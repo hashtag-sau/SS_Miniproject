@@ -132,8 +132,7 @@ void *connection_handler(void *connFD_ptr) {
                     break;
                 case 2:
                     // Customer
-                    // customer_function_handler(connectionFD);
-                    printf("hii hiihi");
+                    customer_operation_handler(connectionFD);
 
                     break;
                 case 3:

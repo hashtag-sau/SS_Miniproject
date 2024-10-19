@@ -16,7 +16,7 @@
 #define GET_ACCOUNT_NUMBER "Enter the account number of the account you're searching for"
 #define GET_CUSTOMER_ID "Enter the customer ID of the customer you're searching for"
 
-#define ERRON_INPUT_FOR_NUMBER "It seems you have passed a sequence of alphabets when a number was expected or you have entered an invalid number!\nYou'll now be redirected to the main menu!^"
+#define ERRON_INPUT_FOR_NUMBER "Ya its robust(somewhat) (⌐■_■) \nIt seems you have passed a sequence of alphabets when a number was expected or you have entered an invalid number!\nYou'll now be redirected to the main menu!^"
 
 #define INVALID_MENU_CHOICE "It seems you've made an invalid menu choice\nYou'll now be redirected to the main menu!^"
 
@@ -71,11 +71,36 @@
 
 // ====================================================
 
+// ========== EMPLOYEE SPECIFIC TEXT======================
+#define EMPLOYEE_LOGIN_WELCOME "Welcome dear employee! Enter your cerdentials"
+#define EMPLOYEE_LOGIN_SUCCESS "Sucessfully logged in. Now start working, and remember not to take rest"
+
+#define EMPLOYEE_LOGOUT "Logging you out now dear employee!!$"
+#define EMPLOYEE_MENU "1. Get Customer Details\n2. Get Account Details\n3. Get Transaction details\n4. Add Account\n5. Delete Account\n6. Modify Customer Information\nPress any other key to logout"
+
+#define EMPLOYEE_ID_DOESNT_EXIT "No employee could be found for the given ID"
+#define EMPLOYEE_LOGIN_ID_DOESNT_EXIT "No employee could be found for the given login ID$"
+
+// employee creating account for customer
+#define NEW_ACCOUNT_NUMBER "The newly created account's number is :"
+#define ADD_CUSTOMER "__Enter Customer Details__\n"
+#define ADD_CUSTOMER_NAME "Enter customer's name: "
+#define ADD_CUSTOMER_PHONE "Enter customer's phone number: "
+#define ADD_CUSTOMER_WRONG_PHONE "It seems you've entered an invalid phone number!^"
+#define ADD_CUSTOMER_LOGIN_PASS "The login ID and password for the customer is : "
+
+// modify customer info
+#define MODIFY_CUSTOMER_ID "Enter the ID of the customer who's information you want to edit"
+#define MODIFY_CUSTOMER_MENU "Which information would you like to modify?\n1. Name 2. Phone\nPress any other key to cancel"
+#define MODIFY_CUSTOMER_NEW_NAME "What's the updated name? "
+#define MODIFY_CUSTOMER_NEW_PHONE "What's the updated phone number? "
+#define MODIFY_CUSTOMER_SUCCESS "The required modification was successfully made!\nYou'll now be redirected to the main menu!^"
+
 // ========== CUSTOMER SPECIFIC TEXT===================
 
 // LOGIN WELCOME
-#define CUSTOMER_LOGIN_WELCOME "Welcome dear customer! Enter your credentials to gain access to your account!"
-#define CUSTOMER_LOGIN_SUCCESS "Welcome beloved customer!"
+#define CUSTOMER_LOGIN_WELCOME "Welcome dear customer! Enter your cerdentials"
+#define CUSTOMER_LOGIN_SUCCESS "Sucessfully logged in. Now go to counter 5"
 
 #define CUSTOMER_LOGOUT "Logging you out now dear customer! Good bye!$"
 
@@ -103,8 +128,10 @@
 
 #define SESSION_TIMEOUT "No data received within 60 seconds.\n closing connection bye bye\n"
 
-#define ACCOUNT_FILE "./records/account.bank"
-#define CUSTOMER_FILE "./records/customer.bank"
-#define TRANSACTION_FILE "./records/transactions.bank"
+#define ACCOUNT_FILE "../db/account_db"
+#define CUSTOMER_FILE "../db/customer_db"
+#define TRANSACTION_FILE "../db/transaction_db"
+#define ADMIN_FILE "../db/admin_db"
+#define EMPLOYEE_FILE "../db/employee_db"
 
 #endif
