@@ -6,7 +6,7 @@ struct Employee {
     char name[30];
     bool ismanager;
     // Login Credentials
-    char login[30];  // name_id will be loginid
+    char login[50];  // name_id will be loginid
     char password[30];
 };
 

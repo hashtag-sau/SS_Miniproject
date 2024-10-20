@@ -14,6 +14,7 @@
 
 #include "../functions/admin.h"
 #include "../functions/customer.h"
+#include "../functions/employee.h"
 #include "../include/constants.h"
 
 void *connection_handler(void *connFD_ptr);  // Thread function to handle communication with the client
@@ -75,7 +76,7 @@ void *connection_handler(void *connFD_ptr) {
     int connectionFD = *(int *)connFD_ptr;
     printf("Client has connected to the server!\n");
 
-    char readBuffer[1000];
+    char readBuffer[10000];
     ssize_t readBytes;
     int userChoice;
 
@@ -128,7 +129,7 @@ void *connection_handler(void *connFD_ptr) {
                     if (pthread_setschedparam(current_thread, policy, &param) != 0) {  // increasing priority for admin
                         perror("Failed to set thread priority");
                     }
-                    // admin_function_handler(connectionFD);
+                    admin_operation_handler(connectionFD);
                     break;
                 case 2:
                     // Customer
@@ -136,8 +137,8 @@ void *connection_handler(void *connFD_ptr) {
 
                     break;
                 case 3:
-                    // Manager
-                    // employee_function_handler(connectionFD);
+                    // employee
+                    employee_operation_handler(connectionFD);
                     break;
                 case 4:
                     printf("Exiting...\n");

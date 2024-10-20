@@ -3,11 +3,9 @@
 
 struct Admin {
     int id;
-    char name[25];
-    int phone;
-
+    char name[30];
     // Login Credentials
-    char login[30];  // name_id will be loginid
+    char login[50];  // name_id will be loginid
     char password[30];
 };
 

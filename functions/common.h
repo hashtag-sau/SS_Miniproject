@@ -16,6 +16,7 @@
 #include "../schemas/admin.h"
 #include "../schemas/customer.h"
 #include "../schemas/transaction.h"
+#include "auxillaries.h"
 
 // Function Prototypes =================================
 
@@ -82,39 +83,30 @@ bool get_account_details(int connFD, struct Account *customerAccount, int Accoun
         bzero(writeBuffer, sizeof(writeBuffer));
         strcpy(writeBuffer, ACCOUNT_ID_DOESNT_EXIT);
         strcat(writeBuffer, "^");
-        perror("Error seeking to account record in get_account_details!");
+        perror("Error seeking to account record in get_account_details!\n");
         writeBytes = write(connFD, writeBuffer, strlen(writeBuffer));
         if (writeBytes == -1) {
-            perror("Error while writing ACCOUNT_ID_DOESNT_EXIT message to client!");
+            perror("Error while writing ACCOUNT_ID_DOESNT_EXIT message to client!\n");
             return false;
         }
         readBytes = read(connFD, readBuffer, sizeof(readBuffer));  // Dummy read
         return false;
     } else if (offset == -1) {
-        perror("Error while seeking to required account record!");
+        perror("Error while seeking to required account record! \n");
         return false;
     }
-
-    struct flock lock = {F_RDLCK, SEEK_SET, offset, sizeof(struct Account), 0};
-
-    int lockingStatus = fcntl(accountFileDescriptor, F_SETLKW, &lock);
-    if (lockingStatus == -1) {
-        perror("Error obtaining read lock on account record!");
-        return false;
-    }
-
-    readBytes = read(accountFileDescriptor, &account, sizeof(struct Account));
-    if (readBytes == -1) {
-        perror("Error reading account record from file!");
-        return false;
-    }
-
-    lock.l_type = F_UNLCK;
-    fcntl(accountFileDescriptor, F_SETLK, &lock);
 
     if (customerAccount != NULL) {
         *customerAccount = account;
         return true;
+    }
+
+    offset = lseek(accountFileDescriptor, offset, SEEK_SET);
+
+    readBytes = read(accountFileDescriptor, &account, sizeof(struct Account));
+    if (readBytes == -1) {
+        perror("Error reading employee record from file!");
+        return false;
     }
 
     bzero(writeBuffer, sizeof(writeBuffer));
@@ -208,7 +200,7 @@ bool get_customer_details(int connFD, int customerID) {
     fcntl(customerFileDescriptor, F_SETLK, &lock);
 
     bzero(writeBuffer, sizeof(writeBuffer));
-    sprintf(writeBuffer, "Customer Details - \n\tID : %d\n\tName : %s\n\tPhone : %d\n\tAccount Number : %d\n\tUSERID : %s", customer.id, customer.name, customer.phone, customer.account, customer.login);
+    sprintf(writeBuffer, "Customer Details - \n\tID : %d\n\tName : %s\n\tPhone : %ld\n\tAccount Number : %d\n\tUSERID : %s", customer.id, customer.name, customer.phone, customer.account, customer.login);
 
     strcat(writeBuffer, "\n\nYou'll now be redirected to the main menu...^");
 
@@ -327,8 +319,11 @@ off_t find_account(int accountNumber, int accountFileDescriptor) {
             break;
         }
 
+        printf("%d", tempAccount.accountNumber);
         // Check if the account number matches
         if (tempAccount.accountNumber == accountNumber) {
+            lock.l_type = F_UNLCK;
+            fcntl(accountFileDescriptor, F_SETLK, &lock);
             return offset;
         }
 

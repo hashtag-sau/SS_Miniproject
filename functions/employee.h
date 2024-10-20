@@ -1,5 +1,5 @@
-#ifndef ADMIN_FUNCTIONS
-#define ADMIN_FUNCTIONS
+#ifndef EMPLOYEE_FUNCTIONS
+#define EMPLOYEE_FUNCTIONS
 
 #include <ctype.h>  //for isdigit
 
@@ -9,6 +9,7 @@
 #include "../schemas/employee.h"
 #include "../schemas/transaction.h"
 #include "./common.h"
+#include "auxillaries.h"
 
 // Function Prototypes =================================
 
@@ -124,10 +125,10 @@ bool login_handler_employee(int connFD, struct Employee *emp) {
         perror("Error reading password from the client!");
         return false;
     }
+    char password[100];
+    strcpy(password, readBuffer);
 
     if (userFound) {
-        char password[100];
-
         if (strcmp(password, employee.password) == 0) {  // password matching
             *emp = employee;
             return true;
@@ -158,7 +159,7 @@ bool employee_operation_handler(int connFD) {
         strcpy(writeBuffer, EMPLOYEE_LOGIN_SUCCESS);
         while (1) {
             strcat(writeBuffer, "\n");
-            strcat(writeBuffer, ADMIN_MENU);
+            strcat(writeBuffer, EMPLOYEE_MENU);
             writeBytes = write(connFD, writeBuffer, strlen(writeBuffer));
             if (writeBytes == -1) {
                 perror("Error while writing ADMIN_MENU to client!");
@@ -178,7 +179,7 @@ bool employee_operation_handler(int connFD) {
                     get_customer_details(connFD, -1);
                     break;
                 case 2:
-                    get_account_details(connFD, &account, -1);
+                    get_account_details(connFD, NULL, -1);
                     break;
                 case 3:
                     get_transaction_details(connFD, -1);
@@ -263,7 +264,7 @@ bool add_account(int connFD) {
         newAccount.accountNumber = prevAccount.accountNumber + 1;
     }
 
-    accountFileDescriptor = open(ACCOUNT_FILE, O_RDONLY);
+    accountFileDescriptor = open(ACCOUNT_FILE, O_WRONLY);
 
     writeBytes = write(accountFileDescriptor, &newAccount, sizeof(struct Account));
     if (writeBytes == -1) {
@@ -273,7 +274,7 @@ bool add_account(int connFD) {
 
     close(accountFileDescriptor);
 
-    int customerFileDescriptor = open(CUSTOMER_FILE, O_RDWR | O_CREAT | O_EXCL, S_IRWXU);
+    int customerFileDescriptor = open(CUSTOMER_FILE, O_RDWR, S_IRWXU);
     if (customerFileDescriptor == -1) {
         perror("Error while opening customer file");
         return -1;
@@ -300,7 +301,7 @@ int add_customer(int connFD) {
 
     struct Customer newCustomer, previousCustomer;
 
-    int customerFileDescriptor = open(CUSTOMER_FILE, O_RDWR | O_CREAT | O_EXCL, S_IRWXU);
+    int customerFileDescriptor = open(CUSTOMER_FILE, O_RDWR, S_IRWXU);
     if (customerFileDescriptor == -1) {
         perror("Error while opening customer file");
         return -1;
@@ -308,6 +309,7 @@ int add_customer(int connFD) {
         int offset = lseek(customerFileDescriptor, -sizeof(struct Customer), SEEK_END);
         if (offset == -1) {
             perror("Error seeking to last Customer record!");
+            // offset = 0;
             return false;
         }
 
@@ -324,6 +326,7 @@ int add_customer(int connFD) {
             return false;
         }
         newCustomer.id = previousCustomer.id + 1;
+        // newCustomer.id = 0;
 
         sprintf(writeBuffer, "%s%s", ADD_CUSTOMER, ADD_CUSTOMER_NAME);
 
@@ -361,14 +364,7 @@ int add_customer(int connFD) {
             return false;
         }
 
-        newCustomer.phone = atoi(readBuffer);
-
-        bzero(readBuffer, sizeof(readBuffer));
-        readBytes = read(connFD, readBuffer, sizeof(readBuffer));
-        if (readBytes == -1) {
-            perror("Error reading customer age response from client!");
-            return false;
-        }
+        newCustomer.phone = atol(readBuffer);
 
         newCustomer.account = -700;
 
@@ -398,9 +394,9 @@ int add_customer(int connFD) {
     }
 
     bzero(writeBuffer, sizeof(writeBuffer));
-    char firstName[100];
-    sscanf(newCustomer.name, "%s", firstName);
-    sprintf(writeBuffer, "%s\n%s_%d\n%s", ADD_CUSTOMER_LOGIN_PASS, firstName, newCustomer.id, newCustomer.password);
+    // char firstName[100];
+    // sscanf(newCustomer.name, "%s", firstName);
+    sprintf(writeBuffer, "%s\n%s_%d\n%s", ADD_CUSTOMER_LOGIN_PASS, newCustomer.name, newCustomer.id, newCustomer.password);
     strcat(writeBuffer, "^");
     writeBytes = write(connFD, writeBuffer, strlen(writeBuffer));
     if (writeBytes == -1) {
@@ -688,7 +684,7 @@ bool modify_customer_info(int connFD) {
                 readBytes = read(connFD, readBuffer, sizeof(readBuffer));  // Dummy read
                 return false;
             }
-            int updatedPhone = atoi(readBuffer);
+            long int updatedPhone = atol(readBuffer);
             customer.phone = updatedPhone;
             break;
 
@@ -751,26 +747,6 @@ bool is_valid_phone_number(const char *phone) {
     }
     for (int i = 0; i < 10; i++) {
         if (!isdigit(phone[i])) {
-            return false;
-        }
-    }
-    return true;
-}
-
-// Function to generate a random 5-character password
-void generate_random_password(char *password, size_t length) {
-    const char charset[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-    for (size_t i = 0; i < length; i++) {
-        int key = rand() % (int)(sizeof(charset) - 1);
-        password[i] = charset[key];
-    }
-    password[length] = '\0';  // Null-terminate the string
-}
-
-// Function to check if a string is purely a number
-bool is_pure_number(const char *str) {
-    for (size_t i = 0; i < strlen(str); i++) {
-        if (!isdigit(str[i])) {
             return false;
         }
     }

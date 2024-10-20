@@ -38,11 +38,11 @@ void main() {
 // Handles the read & write operations w the server
 void connection_handler(int sockFD) {
     // creating buffers for reading and writing
-    char readBuffer[1000], writeBuffer[1000];  // Buffers for reading from and writing to the server
-    ssize_t readBytes, writeBytes;             // Number of bytes read from or written to the socket
+    char readBuffer[10000], writeBuffer[10000];  // Buffers for reading from and writing to the server
+    ssize_t readBytes, writeBytes;               // Number of bytes read from or written to the socket
     // ssize_t is standard return type for read() and write()
 
-    char tempBuffer[1000];
+    char tempBuffer[10000];
 
     do {
         // emptying the  buffers to ensure it doesn't contains residual from previous iterations
@@ -85,7 +85,7 @@ void connection_handler(int sockFD) {
             if (strchr(readBuffer, '#') != NULL)
                 strcpy(writeBuffer, getpass(readBuffer));
             else {
-                printf("%s check\n", readBuffer);
+                printf("%s", readBuffer);
                 scanf("%[^\n]%*c", writeBuffer);  // Take user input!
             }
 

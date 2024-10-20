@@ -131,9 +131,10 @@ bool login_handler_customer(int connFD, struct Customer *cust) {
         return false;
     }
 
-    if (userFound) {
-        char password[100];
+    char password[100];
+    strcpy(password, readBuffer);
 
+    if (userFound) {
         if (strcmp(password, customer.password) == 0) {  // password matching
             *cust = customer;
             return true;
