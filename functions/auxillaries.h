@@ -26,4 +26,30 @@ void generate_random_password(char *password, size_t length) {
     password[length] = '\0';  // Null-terminate the string
 }
 
+void clear_screen(int connFD) {
+    char writeBuffer[1000];
+    ssize_t writeBytes;
+
+    bzero(writeBuffer, sizeof(writeBuffer));
+    sprintf(writeBuffer, "%s", "~");
+    writeBytes = write(connFD, writeBuffer, strlen(writeBuffer));
+    if (writeBytes == -1) {
+        perror("Error sending clear screen command to the client!");
+    }
+    read(connFD, writeBuffer, sizeof(writeBuffer));  // Dummy read
+}
+
+void hold_screen(int connFD) {
+    char writeBuffer[1000];
+    ssize_t writeBytes;
+
+    bzero(writeBuffer, sizeof(writeBuffer));
+    sprintf(writeBuffer, "%s", "🕹️Press any key to continue... ▶️");
+    writeBytes = write(connFD, writeBuffer, strlen(writeBuffer));
+    if (writeBytes == -1) {
+        perror("Error sending clear screen command to the client!");
+    }
+    read(connFD, writeBuffer, sizeof(writeBuffer));  // Dummy read
+}
+
 #endif  // AUXILLARIES_H

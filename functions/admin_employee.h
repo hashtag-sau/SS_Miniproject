@@ -87,7 +87,7 @@ bool get_employee_details(int connFD, int empID) {
     fcntl(empFD, F_SETLK, &lock);
 
     bzero(writeBuffer, sizeof(writeBuffer));
-    sprintf(writeBuffer, "Employee Details - \n\tID : %d\n\tName : %s\n\tisManager : %s\n", employee.id, employee.name, (employee.ismanager ? "YES" : "NO"));
+    sprintf(writeBuffer, "Employee Details - ID: %d, Name: %s, isManager: %s", employee.id, employee.name, (employee.ismanager ? "YES" : "NO"));
 
     strcat(writeBuffer, "^");
 
@@ -205,8 +205,8 @@ int add_employee(int connFD) {
     bzero(writeBuffer, sizeof(writeBuffer));
     // char firstName[100];
     // sscanf(newEmployee.name, "%s", firstName);
-    sprintf(writeBuffer, "%s\n%s_%d\n%s", ADD_EMPLOYEE_LOGIN_PASS, newEmployee.name, newEmployee.id, newEmployee.password);
-    strcat(writeBuffer, "^");
+    sprintf(writeBuffer, "%s\t%s_%d\t%s\n", ADD_EMPLOYEE_LOGIN_PASS, newEmployee.name, newEmployee.id, newEmployee.password);
+    strcat(writeBuffer, ADD_EMPLOYEE_SUCCESS);
     writeBytes = write(connFD, writeBuffer, strlen(writeBuffer));
     if (writeBytes == -1) {
         perror("Error sending employee loginID and password to the client!");
@@ -375,6 +375,64 @@ int modify_employee(int connFD) {
     readBytes = read(connFD, readBuffer, sizeof(readBuffer));  // Dummy read
 
     return newEmployee.id;
+}
+
+bool list_all_employees(int connFD) {
+    char readBuffer[10000], writeBuffer[10000];
+    ssize_t readBytes, writeBytes;
+    int empFD;
+
+    empFD = open(EMPLOYEE_FILE, O_RDONLY);
+    if (empFD == -1) {
+        perror("Error while opening employee file");
+        return false;
+    }
+
+    struct Employee employee;
+
+    clear_screen(connFD);
+
+    // Reading all the employees from the file and sending them to the client
+    while (read(empFD, &employee, sizeof(struct Employee)) > 0) {
+        bzero(writeBuffer, sizeof(writeBuffer));
+
+        // Adding a header before the list of employees only once
+        if (employee.id == 0) {  // Assuming ID 1 is the first employee
+            sprintf(writeBuffer, "\n");
+            strcat(writeBuffer, "═══════════════════════════════════════════════\n");
+            strcat(writeBuffer, "                📋 Employee Details\n");
+            strcat(writeBuffer, "═══════════════════════════════════════════════\n");
+            strcat(writeBuffer, "ID        | Name                    | Manager \n");
+            strcat(writeBuffer, "═══════════════════════════════════════════════\n");
+        }
+
+        // Formatting employee details with fixed-width for better alignment
+        sprintf(writeBuffer + strlen(writeBuffer),
+                "%-10d | %-22s | %s\n",
+                employee.id,
+                employee.name,
+                (employee.ismanager ? "YES" : "NO"));
+
+        // Sending a separator for clarity
+        strcat(writeBuffer, "-----------------------------------------------\n");
+
+        // Sending the formatted employee details to the client
+        strcat(writeBuffer, "^");
+        writeBytes = write(connFD, writeBuffer, strlen(writeBuffer));
+        if (writeBytes == -1) {
+            perror("Error sending employee details to the client!");
+            close(empFD);
+            return false;
+        }
+
+        // Dummy read
+        readBytes = read(connFD, readBuffer, sizeof(readBuffer));
+    }
+
+    close(empFD);
+    hold_screen(connFD);
+
+    return true;
 }
 
 #endif  // ADMIN_EMPLOYEE_H

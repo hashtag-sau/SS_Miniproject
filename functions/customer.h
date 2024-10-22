@@ -155,7 +155,7 @@ bool login_handler_customer(int connFD, struct Customer *cust) {
 bool customer_operation_handler(int connFD) {
     if (login_handler_customer(connFD, &loggedInCustomer)) {
         ssize_t writeBytes, readBytes;  // Number of bytes read from / written to the client
-        char readBuffer[1000], writeBuffer[1000];
+        char readBuffer[1000], writeBuffer[10000];
 
         initialize_semaphores(loggedInCustomer.account);
         int session = lock_semaphore(loginSemIdentifier, 1);
@@ -205,6 +205,7 @@ bool customer_operation_handler(int connFD) {
         bzero(writeBuffer, sizeof(writeBuffer));
         strcpy(writeBuffer, CUSTOMER_LOGIN_SUCCESS);
         while (1) {
+            clear_screen(connFD);  // Clear the screen
             strcat(writeBuffer, "\n");
             strcat(writeBuffer, CUSTOMER_MENU);
             writeBytes = write(connFD, writeBuffer, strlen(writeBuffer));
@@ -241,7 +242,7 @@ bool customer_operation_handler(int connFD) {
                     get_balance(connFD);
                     break;
                 case 6:
-                    get_transaction_details(connFD, loggedInCustomer.account);
+                    get_passbook(connFD, loggedInCustomer.account);
                     break;
                 case 7:
                     change_password(connFD);
@@ -251,6 +252,7 @@ bool customer_operation_handler(int connFD) {
                     writeBytes = write(connFD, CUSTOMER_LOGOUT, strlen(CUSTOMER_LOGOUT));
                     return false;
             }
+            hold_screen(connFD);
         }
     } else {
         // CUSTOMER LOGIN FAILED

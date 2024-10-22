@@ -148,11 +148,13 @@ bool admin_operation_handler(int connFD) {
     int customerID;
 
     if (login_handler_admin(connFD, &admin)) {
-        ssize_t writeBytes, readBytes;             // Number of bytes read from / written to the client
-        char readBuffer[1000], writeBuffer[1000];  // A buffer used for reading & writing to the client
+        ssize_t writeBytes, readBytes;               // Number of bytes read from / written to the client
+        char readBuffer[10000], writeBuffer[10000];  // A buffer used for reading & writing to the client
         bzero(writeBuffer, sizeof(writeBuffer));
         strcpy(writeBuffer, ADMIN_LOGIN_SUCCESS);
         while (1) {
+            clear_screen(connFD);  // Clear the screen
+            bzero(readBuffer, sizeof(readBuffer));
             strcat(writeBuffer, "\n");
             strcat(writeBuffer, ADMIN_MENU);
             writeBytes = write(connFD, writeBuffer, strlen(writeBuffer));
@@ -181,12 +183,16 @@ bool admin_operation_handler(int connFD) {
                     modify_employee(connFD);
                     break;
                 case 4:
+                    list_all_employees(connFD);
+                    break;
+                case 5:
                     add_admin(connFD);
                     break;
                 default:
                     writeBytes = write(connFD, ADMIN_LOGOUT, strlen(ADMIN_LOGOUT));
                     return false;
             }
+            hold_screen(connFD);
         }
     } else {
         // ADMIN LOGIN FAILED

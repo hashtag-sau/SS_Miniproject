@@ -18,6 +18,12 @@
 #include "../schemas/transaction.h"
 #include "auxillaries.h"
 
+// ANSI color codes
+#define COLOR_RESET "\033[0m"
+#define COLOR_HEADER "\033[1;36m"  // Cyan
+#define COLOR_AMOUNT "\033[1;32m"  // Green
+#define COLOR_EMOJI "\033[1;33m"   // Yellow
+
 // Function Prototypes =================================
 
 // bool login_handler(bool isAdmin, int connFD, struct Customer *customerAccou);
@@ -287,6 +293,109 @@ bool get_transaction_details(int connFD, int accountNumber) {
             read(connFD, readBuffer, sizeof(readBuffer));  // Dummy read
         }
     }
+}
+
+bool get_passbook(int connFD, int accountNumber) {
+    char readBuffer[10000], writeBuffer[10000];
+    ssize_t readBytes, writeBytes;
+    struct Transaction tempTransaction;
+
+    int transactionFileDescriptor = open(TRANSACTION_FILE, O_RDONLY);
+    if (transactionFileDescriptor == -1) {
+        perror("Error opening transaction file");
+        return false;  // Return false on failure
+    }
+
+    clear_screen(connFD);
+
+    // Send header to the client
+    // Send header to the client
+    snprintf(writeBuffer, sizeof(writeBuffer),
+             "\n╔════════════════════════════════════════════════════════════════════════════════════════╗\n"
+             "║                         🧾 Passbook Transactions                                       ║\n"
+             "╠════════════════════════════════════════════════════════════════════════════════════════╣\n"
+             "║    Date & Time          | Sender Account | Receiver Account |    Type    |   Amount    ║\n"  // Adjusted widths
+             "╠════════════════════════════════════════════════════════════════════════════════════════╣\n^");
+    writeBytes = write(connFD, writeBuffer, strlen(writeBuffer));
+    if (writeBytes == -1) {
+        perror("Error sending header to client!");
+        close(transactionFileDescriptor);
+        return false;
+    }
+    readBytes = read(connFD, readBuffer, sizeof(readBuffer));  // Dummy read
+
+    // Iterate through all transaction records
+    while (read(transactionFileDescriptor, &tempTransaction, sizeof(struct Transaction)) > 0) {
+        // Check if the transaction involves the given account number
+        if (tempTransaction.senderAccountNumber != accountNumber &&
+            tempTransaction.receiverAccountNumber != accountNumber) {
+            continue;  // Skip this transaction if it doesn't involve the account
+        }
+
+        char *amountColor;
+
+        char operationType[10];
+        char dateTime[26];  // Buffer for formatted date/time
+
+        // Determine the operation type
+        if (tempTransaction.receiverAccountNumber == -1) {
+            snprintf(operationType, sizeof(operationType), "Withdraw");
+            amountColor = "\033[0;31m";  // Red color
+
+        } else if (tempTransaction.receiverAccountNumber == -2) {
+            snprintf(operationType, sizeof(operationType), "Deposit");
+            amountColor = "\033[0;32m";  // green color
+        } else if (tempTransaction.senderAccountNumber == accountNumber) {
+            snprintf(operationType, sizeof(operationType), "Send");
+            amountColor = "\033[0;31m";  // Red coolor
+        } else {
+            snprintf(operationType, sizeof(operationType), "Receive");
+            amountColor = "\033[0;32m";  // green color
+        }
+
+        // Format the timestamp into a human-readable string
+        struct tm *tm_info = localtime(&tempTransaction.transactionTimestamp);
+        strftime(dateTime, sizeof(dateTime), "%Y-%m-%d %H:%M:%S", tm_info);
+
+        char receiverAcc[11];
+        snprintf(receiverAcc, sizeof(receiverAcc), "%d", tempTransaction.receiverAccountNumber);
+
+        snprintf(writeBuffer, sizeof(writeBuffer),
+                 "║ %-22s | %-15d | %-16s | %-10s | " COLOR_AMOUNT "%s%-8d" COLOR_RESET "    ║\n",
+                 dateTime,
+                 tempTransaction.senderAccountNumber,
+                 (tempTransaction.receiverAccountNumber < 0) ? "N/A" : receiverAcc,
+                 operationType,
+                 amountColor,  // Use the selected color for the amount
+                 tempTransaction.amount);
+
+        // Send transaction details to the client
+        strcat(writeBuffer, "^");
+        writeBytes = write(connFD, writeBuffer, strlen(writeBuffer));
+        if (writeBytes == -1) {
+            perror("Error sending transaction details to the client!");
+            close(transactionFileDescriptor);
+            return false;
+        }
+        readBytes = read(connFD, readBuffer, sizeof(readBuffer));  // Dummy read
+    }
+
+    // Finalizing the passbook display
+    snprintf(writeBuffer, sizeof(writeBuffer),
+             "╚════════════════════════════════════════════════════════════════════════════════════════╝\n");
+    strcat(writeBuffer, "^");
+    writeBytes = write(connFD, writeBuffer, strlen(writeBuffer));
+    if (writeBytes == -1) {
+        perror("Error finalizing passbook display for the client!");
+        close(transactionFileDescriptor);
+        return false;
+    }
+
+    readBytes = read(connFD, readBuffer, sizeof(readBuffer));  // Dummy read
+
+    close(transactionFileDescriptor);
+    hold_screen(connFD);
+    return true;  // Return true on success
 }
 
 off_t find_account(int accountNumber, int accountFileDescriptor) {

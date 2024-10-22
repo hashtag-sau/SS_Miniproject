@@ -3,11 +3,14 @@
 #include <netinet/ip.h>  // constants and structures for Internet Protocol family, IPv4 addresses, sockaddr_in struct
 #include <pthread.h>     // `pthread` functions
 #include <sched.h>
+#include <signal.h>  // For signal handling (SIGINT)
 #include <stdbool.h>
 #include <stdio.h>   // printf,perror functions
 #include <stdlib.h>  // atoi function
 #include <string.h>
+#include <sys/ipc.h>  // For System V IPC
 #include <sys/select.h>
+#include <sys/shm.h>     // For System V shared memory
 #include <sys/socket.h>  // socket, bind, listen, accept functions
 #include <sys/types.h>   // socket, bind, listen, accept functions
 #include <unistd.h>      // read, write, close functions
@@ -17,9 +20,51 @@
 #include "../functions/employee.h"
 #include "../include/constants.h"
 
+// Shared memory key and size
+#define SHM_KEY 1234
+#define SHM_SIZE sizeof(SharedData)
+
+// Shared structure in shared memory
+typedef struct {
+    long int active_clients;
+} SharedData;
+
+SharedData *shared_data;  // pointer to shared memory segment
+long int client_count = 0;
+
 void *connection_handler(void *connFD_ptr);  // Thread function to handle communication with the client
 
+SharedData *shared_data;  // Pointer to shared memory segment
+int shm_id;               // Shared memory identifier
+int socketFD;             // Socket file descriptor
+
+void handle_sigint(int sig);
+
 int main() {
+    printf("starting server.....\n");
+    // Register signal handler for SIGINT
+    signal(SIGINT, handle_sigint);
+
+    // ======= Adding shared memory segment for monitoring active user=======
+    // Create System V shared memory segment
+    // Create System V shared memory segment
+    shm_id = shmget(SHM_KEY, SHM_SIZE, IPC_CREAT | 0666);
+    if (shm_id == -1) {
+        perror("shmget failed");
+        exit(1);
+    }
+
+    // Attach to the shared memory segment
+    shared_data = (SharedData *)shmat(shm_id, NULL, 0);
+    if (shared_data == (SharedData *)-1) {
+        perror("shmat failed");
+        exit(1);
+    }
+
+    // Initialize shared memory values
+    shared_data->active_clients = 0;
+
+    // ====server code starts from here =====
     int socketFD, connectionFD;
     struct sockaddr_in serverAddress, clientAddress;
 
@@ -48,6 +93,7 @@ int main() {
         return -1;
     }
 
+    printf("🟢 Server is listening on port 8080...\n");
     int clientSize;
     while (1) {
         clientSize = sizeof(clientAddress);
@@ -73,41 +119,23 @@ int main() {
 }
 
 void *connection_handler(void *connFD_ptr) {
+    // Update active clients in shared memory
+    shared_data->active_clients++;
+
+    printf("+ A Client has connected to the server!\n");
+
     int connectionFD = *(int *)connFD_ptr;
-    printf("Client has connected to the server!\n");
 
     char readBuffer[10000];
     ssize_t readBytes;
     int userChoice;
 
     // Send initial prompt to the user when it connects
-    ssize_t writeBytes = write(connectionFD, INITIAL_PROMPT2, strlen(INITIAL_PROMPT2));
+    ssize_t writeBytes = write(connectionFD, INITIAL_PROMPT, strlen(INITIAL_PROMPT));
 
     if (writeBytes == -1)
         perror("Error while sending first prompt to the user!");
     else {
-        fd_set readfds;
-        struct timeval timeout;
-        timeout.tv_sec = 60;
-        timeout.tv_usec = 0;
-
-        FD_ZERO(&readfds);               // Clear the set of monitored file descriptors
-        FD_SET(connectionFD, &readfds);  // Add the client socket to the set
-
-        int selectResult = select(connectionFD + 1, &readfds, NULL, NULL, &timeout);
-        // using select to monitor activity on socket and timeout if no activity is detected
-        // for scenario where client is direclty closing the app without logging out
-        if (selectResult == -1) {
-            // Error occurred during select()
-            perror("select() error");
-
-        } else if (selectResult == 0) {
-            // Timeout occurred, no data received
-            write(connectionFD, SESSION_TIMEOUT, strlen(SESSION_TIMEOUT));
-            close(connectionFD);
-            return NULL;
-        }
-
         bzero(readBuffer, sizeof(readBuffer));
         readBytes = read(connectionFD, readBuffer, sizeof(readBuffer));
         if (readBytes == -1)
@@ -149,7 +177,32 @@ void *connection_handler(void *connFD_ptr) {
             }
         }
     }
-    printf("Terminating connection to client!\n");
+    // Decrease active clients when client disconnects
+    shared_data->active_clients--;
+
+    printf("- Terminating connection to client!\n");
     close(connectionFD);  // Close the connection
     return NULL;          // Exit the thread
+}
+
+// Signal handler for SIGINT (Ctrl+C)
+void handle_sigint(int sig) {
+    printf("\nServer shutting down...\n");
+
+    // Detach from the shared memory
+    if (shmdt(shared_data) == -1) {
+        perror("shmdt failed");
+    }
+
+    // Mark the shared memory segment for deletion
+    if (shmctl(shm_id, IPC_RMID, NULL) == -1) {
+        perror("shmctl failed");
+    }
+
+    // Close the server socket
+    if (close(socketFD) == -1) {
+        perror("Failed to close socket");
+    }
+
+    exit(0);  // Exit the program cleanly
 }

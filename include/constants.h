@@ -1,29 +1,29 @@
 #ifndef SERVER_CONSTANTS
 #define SERVER_CONSTANTS
-#define INITIAL_PROMPT \
-    "\
-╔════════════════════════════════════════════════════════════════╗\n\
-║                                                                ║\n\
-║   🌟 Welcome to OnlyBanks of India! 🌟                         ║\n\
-║                                                                ║\n\
-║   Please identify yourself:                                    ║\n\
-║   1. 👑 Admin                                                  ║\n\
-║   2. 👤 Customer                                               ║\n\
-║   3. 🧑‍💼 Employee                                             ║\n\
-║                                                                ║\n\
-║   Enter any other number to exit.                              ║\n\
-║                                                                ║\n\
-╚════════════════════════════════════════════════════════════════╝\n\
-Enter your choice: "
+#define INITIAL_PROMPT                                                                                                                                                                                                    \
+    "\n"                                                                                                                                                                                                                  \
+    "\033[1;36m╔══════════════════════════════════════════════════════════════╗\033[0m\n" \
+    "\033[1;36m║                                                              ║\033[0m\n"                                                                                                                             \
+    "\033[1;36m║       \033[1;33m🏦  WELCOME TO  ONLYBANKS OF INDIA! 🏦   \033[1;36m              ║\033[0m\n"                                                                                                     \
+    "\033[1;36m║                                                              ║\033[0m\n"                                                                                                                             \
+    "\033[1;36m║              Please identify yourself:                       ║\033[0m\n"                                                                                                                             \
+    "\033[1;36m║              1. 👑 Admin                                     ║\033[0m\n"                                                                                                                           \
+    "\033[1;36m║              2. 👤 Customer                                  ║\033[0m\n"                                                                                                                           \
+    "\033[1;36m║              3. 🧑‍💼 Employee                                ║\033[0m\n"                                                                                                                      \
+    "\033[1;36m║                                                              ║\033[0m\n"                                                                                                                             \
+    "\033[1;36m║              Enter any other number to exit.                 ║\033[0m\n"                                                                                                                             \
+    "\033[1;36m║                                                              ║\033[0m\n"                                                                                                                             \
+    "\033[1;36m╚══════════════════════════════════════════════════════════════╝\033[0m\n" \
+    "Enter your choice: "
 
 #define INITIAL_PROMPT2 "Enter your choice: 1. admin 2. customer 3. employee 4. exit\n"
 // ========== COMMON TEXT =============================
 
 // LOGIN
-#define LOGIN_ID "Enter your login ID"
-#define PASSWORD "Enter your password \n# "
-#define INVALID_LOGIN "The login ID specified doesn't exist!$"
-#define INVALID_PASSWORD "The password specified doesn't match!$"
+#define LOGIN_ID "\033[1;34m🔐 Enter your login ID: \033[0m"
+#define PASSWORD "\033[1;33m🔑 Enter your password: \033[0m\n#"
+#define INVALID_LOGIN "\033[1;31m🚫 The login ID specified doesn't exist! \033[0m$"
+#define INVALID_PASSWORD "\033[1;31m❌ The password specified doesn't match! \033[0m$"
 
 // GET ACCOUNT DETAILS
 #define GET_ACCOUNT_NUMBER "Enter the account number of the account you're searching for"
@@ -45,11 +45,30 @@ Enter your choice: "
 // ========== ADMIN SPECIFIC TEXT======================
 
 // LOGIN WELCOME
-#define ADMIN_LOGIN_WELCOME "Welcome dear admin! With great power comes great responsibility!\nEnter your credentials to unlock this power!"
-#define ADMIN_LOGIN_SUCCESS "Welcome superman!"
+#define ADMIN_LOGIN_WELCOME \
+    "\
+\033[1;34m🚀 Welcome aboard, Admin Commander! 🚀\033[0m\n\
+\033[1;33m🔑 Please enter your credentials to gain access.\033[0m\n"
+
+#define ADMIN_LOGIN_SUCCESS \
+    "\
+\033[1;32m✅ Access Granted! Hello, Admin! ✅\033[0m\n"
 
 // ADMIN MENU
-#define ADMIN_MENU "1. Get Employee Details\n2. Add Employee\n3. modify employee\n4. Add Admin \n5. \nPress any other key to logout"
+#define ADMIN_MENU \
+    "\
+\033[36m╔════════════════════════════════════════════════════════════╗\033[0m\n\
+\033[36m║ \033[35m            🛠️  \033[1;32mAdmin Menu \033[0;35m🛠️              \033[36m║\033[0m\n\
+\033[36m╠════════════════════════════════════════════════════════════╣\033[0m\n\
+\033[36m║ \033[33m1. Get Employee Details    \033[32m👤                      \033[36m║\033[0m\n\
+\033[36m║ \033[33m2. Add Employee            \033[32m➕👨‍💼                   \033[36m║\033[0m\n\
+\033[36m║ \033[33m3. Modify Employee         \033[32m✏️👨‍💼                  \033[36m║\033[0m\n\
+\033[36m║ \033[33m4. List All Employees      \033[32m📋👥                   \033[36m║\033[0m\n\
+\033[36m║ \033[33m5. Add Admin               \033[32m➕🛡️                    \033[36m║\033[0m\n\
+\033[36m╠════════════════════════════════════════════════════════════╣\033[0m\n\
+\033[36m║ \033[31mPress any other key to Logout   \033[32m🚪                   \033[36m║\033[0m\n\
+\033[36m╚════════════════════════════════════════════════════════════╝\033[0m\n"
+#define ADMIN_MENUold "1. Get Employee Details\n2. Add Employee\n3. modify employee\n4. list all employees \n5. Add Admin\nPress any other key to logout"
 
 // DELETE ACCOUNT
 #define ADMIN_DEL_ACCOUNT_NO "What is the account number of the account you want to delete?"
@@ -62,15 +81,15 @@ Enter your choice: "
 #define ADMIN_DOESNT_EXIST "this account doesn't exist"
 
 // admin manages employee
-#define GET_EMPLOYEE_ID "Enter Employee ID you are looking for: "
-#define ADD_EMPLOYEE "__Enter Employee details__"
-#define ADD_EMPLOYEE_NAME "Enter name: "
-#define ADD_EMPLOYEE_LOGIN_PASS "The login ID and password for the employee is : "
-#define MODIFY_EMPLOYEE "Enter the ID of the employee who's information you want to edit"
-#define MODIFY_EMPLOYEE_MENU "Which information would you like to modify?\n1. Name 2. ManagerRole\nPress any other key to cancel"
-#define MODIFY_EMPLOYEE_NEW_NAME "What's the updated name? "
-#define MODIFY_EMPLOYEE_NEW_ISMANAGER "Is the employee a manager? (1/0) "
-
+#define GET_EMPLOYEE_ID "🔍 Please enter the Employee ID you are searching for: "
+#define ADD_EMPLOYEE "📝 __Provide the New Employee's Details__"
+#define ADD_EMPLOYEE_NAME "👤 Enter the employee's name: "
+#define ADD_EMPLOYEE_LOGIN_PASS "🔑 The login ID and password for the employee are: "
+#define MODIFY_EMPLOYEE "✏️ Enter the ID of the employee whose information you'd like to update: "
+#define MODIFY_EMPLOYEE_MENU "⚙️ What information would you like to modify?\n1. Name 2. Manager Role\nPress any other key to cancel."
+#define MODIFY_EMPLOYEE_NEW_NAME "✏️ Please enter the updated name: "
+#define MODIFY_EMPLOYEE_NEW_ISMANAGER "👔 Is this employee a manager? (1 for Yes / 0 for No): "
+#define ADD_EMPLOYEE_SUCCESS "🎉 The employee has been successfully added!^"
 // admin admin
 #define ADD_ADMIN "__Enter Admin details__"
 #define ADD_ADMIN_NAME "Enter name: "
@@ -106,28 +125,61 @@ Enter your choice: "
 // ========== CUSTOMER SPECIFIC TEXT===================
 
 // LOGIN WELCOME
-#define CUSTOMER_LOGIN_WELCOME "Welcome dear customer! Enter your cerdentials"
-#define CUSTOMER_LOGIN_SUCCESS "Sucessfully logged in. Now go to counter 5"
+#define CUSTOMER_LOGIN_WELCOME \
+    "\
+\033[1;34m👋 Welcome, valued customer! 🎉\033[0m\n\
+\033[1;33mPlease enter your credentials to continue.\033[0m\n"
+
+#define CUSTOMER_LOGIN_SUCCESS \
+    "\
+\033[1;32m🎊 Successfully logged in! We hope you have a great experience. 🎊\033[0m\n"
 
 #define CUSTOMER_ALREADY_LOGGED_IN "You're already logged in!$"
 
-#define CUSTOMER_LOGOUT "Logging you out now dear customer! Good bye!$"
-#define SEND_AMOUNT "How much is it that you want to send?"
-#define SEND_ACCOUNT "Enter the account number of the account you want to send money to"
-#define SEND_AMOUNT_SUCCESS "The specified amount has been successfully sent to the specified account!^"
+#define CUSTOMER_LOGOUT "🔒 Logging you out, valued customer! See you again soon!$"
+#define SEND_AMOUNT "💸 How much would you like to transfer today?"
+#define SEND_ACCOUNT "🏦 Please enter the account number to which you'd like to send money."
+#define SEND_AMOUNT_SUCCESS "✅ Transfer successful! The amount has been sent to the specified account!^"
 
 // cusotmer MENU
-#define CUSTOMER_MENU "1. Get Customer Details\n2. Deposit Money\n3. Withdraw Money\n4. Send Money \n5. Get Balance\n6. Get Transaction information\n7. Change Password\nPress any other key to logout"
+#define CUSTOMER_MENUold "1. Get Customer Details\n2. Deposit Money\n3. Withdraw Money\n4. Send Money \n5. Get Balance\n6. View Passbook\n7. Change Password\nPress any other key to logout"
+#define RESET_COLOR "\033[0m"
+#define HEADER_COLOR "\033[1;34m"  // Bright Blue
+#define OPTION_COLOR "\033[1;32m"  // Bright Green
+#define LOGOUT_COLOR "\033[1;31m"  // Bright Red
+
+#define CUSTOMER_MENU                                                                                                                                                                                                \
+    "╔══════════════════════════════════════════════════════════════════╗\n" \
+    "║" HEADER_COLOR "                       🏦 Customer Menu                           " RESET_COLOR                                                                                                                 \
+    "║\n"                                                                                                                                                                                                          \
+    "╠══════════════════════════════════════════════════════════════════╣\n" \
+    "║" OPTION_COLOR " 🌟 1. Get Customer Details                                      " RESET_COLOR                                                                                                                  \
+    "║\n"                                                                                                                                                                                                          \
+    "║" OPTION_COLOR " 💰 2. Deposit Money                                             " RESET_COLOR                                                                                                                  \
+    "║\n"                                                                                                                                                                                                          \
+    "║" OPTION_COLOR " 💸 3. Withdraw Money                                            " RESET_COLOR                                                                                                                  \
+    "║\n"                                                                                                                                                                                                          \
+    "║" OPTION_COLOR " 📤  4. Send Money                                               " RESET_COLOR                                                                                                                  \
+    "║\n"                                                                                                                                                                                                          \
+    "║" OPTION_COLOR " 📊 5. Get Balance                                               " RESET_COLOR                                                                                                                  \
+    "║\n"                                                                                                                                                                                                          \
+    "║" OPTION_COLOR " 📖 6. View Passbook                                             " RESET_COLOR                                                                                                                  \
+    "║\n"                                                                                                                                                                                                          \
+    "║" OPTION_COLOR " 🔒 7. Change Password                                           " RESET_COLOR                                                                                                                  \
+    "║\n"                                                                                                                                                                                                          \
+    "║" LOGOUT_COLOR " 🔙 Press any other key to logout                                " RESET_COLOR                                                                                                                  \
+    "║\n"                                                                                                                                                                                                          \
+    "╚══════════════════════════════════════════════════════════════════╝\n"
 
 #define ACCOUNT_DEACTIVATED "It seems your account has been deactivated!^"
 
-#define DEPOSIT_AMOUNT "How much is it that you want to add into your bank?"
-#define DEPOSIT_AMOUNT_INVALID "You seem to have passed an invalid amount!^"
-#define DEPOSIT_AMOUNT_SUCCESS "The specified amount has been successfully added to your bank account!^"
+#define DEPOSIT_AMOUNT "💰 How much would you like to deposit into your account?\n"
+#define DEPOSIT_AMOUNT_INVALID "⚠️ Oops! That doesn't seem like a valid amount! Please try again.^"
+#define DEPOSIT_AMOUNT_SUCCESS "✅ Success! The amount has been added to your account!^"
 
-#define WITHDRAW_AMOUNT "How much is it that you want to withdraw from your bank?"
-#define WITHDRAW_AMOUNT_INVALID "You seem to have either passed an invalid amount or you don't have enough money in your bank to withdraw the specified amount^"
-#define WITHDRAW_AMOUNT_SUCCESS "The specified amount has been successfully withdrawn from your bank account!^"
+#define WITHDRAW_AMOUNT "🏧 How much would you like to withdraw from your account?\n"
+#define WITHDRAW_AMOUNT_INVALID "⚠️ Insufficient funds or invalid amount! Please check your balance and try again.^"
+#define WITHDRAW_AMOUNT_SUCCESS "✅ Success! The amount has been withdrawn from your account!^"
 
 #define PASSWORD_CHANGE_OLD_PASS "Enter your old password"
 #define PASSWORD_CHANGE_OLD_PASS_INVALID "The entered password doesn't seem to match with the old password"

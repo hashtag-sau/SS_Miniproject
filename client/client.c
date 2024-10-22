@@ -2,11 +2,11 @@
 #include <fcntl.h>       // Import for fcntl functions
 #include <netinet/ip.h>  // Import for sockaddr_in structure
 #include <stdio.h>       // Import for printf & perror functions
+#include <stdlib.h>
 #include <string.h>      // Import for string functions
 #include <sys/socket.h>  // Import for socket, bind, listen, connect functions
 #include <sys/types.h>   // Import for socket, bind, listen, connect, fork, lseek functions
 #include <unistd.h>      // Import for fork, fcntl, read, write, lseek, _exit functions
-
 void connection_handler(int sockFD);
 
 void main() {
@@ -77,6 +77,16 @@ void connection_handler(int sockFD) {
             printf("%s\n", tempBuffer);
             printf("Server is closing the connection now.\n");
             break;
+        }
+
+        else if (strchr(readBuffer, '~') != NULL) {
+            // Clear the terminal screen when receiving '~'
+            system("clear");
+            writeBytes = write(sockFD, "^", strlen("^"));
+            if (writeBytes == -1) {
+                perror("Failed to write to client socket!");
+                break;
+            }
         }
 
         else {
