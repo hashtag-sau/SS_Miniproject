@@ -22,12 +22,14 @@ void insertHardcodedCustomer() {
     struct Customer customer;
     int file;
 
+    memset(&customer, 0, sizeof(struct Customer));
+
     // Hardcode values for the customer
     customer.id = 0;
-    strcpy(customer.name, "shardul");
-    customer.phone = 6666699999;
+    strcpy(customer.name, "harshal");
+    customer.phone = 8008580085;
     customer.account = 1001;
-    strcpy(customer.login, "shardul_0");
+    strcpy(customer.login, "harshal_0");
     strcpy(customer.password, "1234");
 
     // Open the file using the open() system call in write-only and append mode
@@ -36,6 +38,8 @@ void insertHardcodedCustomer() {
         perror("Error opening file");
         exit(1);
     }
+
+    // lseek(file, -sizeof(struct Customer), SEEK_END);
 
     // Write the customer record to the file
     ssize_t bytes_written = write(file, &customer, sizeof(struct Customer));

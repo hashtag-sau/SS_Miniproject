@@ -17,7 +17,8 @@ bool is_pure_number(const char *str) {
 
 // Function to generate a random 5-character password
 void generate_random_password(char *password, size_t length) {
-    const char charset[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    // const char charset[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    const char charset[] = "1";
     for (size_t i = 0; i < length; i++) {
         int key = rand() % (int)(sizeof(charset) - 1);
         password[i] = charset[key];

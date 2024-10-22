@@ -3,6 +3,7 @@
 
 #include <ctype.h>  //for isdigit
 
+#include "../include/common_includes.h"
 #include "../include/constants.h"
 #include "../schemas/account.h"
 #include "../schemas/customer.h"
@@ -158,6 +159,7 @@ bool employee_operation_handler(int connFD) {
         bzero(writeBuffer, sizeof(writeBuffer));
         strcpy(writeBuffer, EMPLOYEE_LOGIN_SUCCESS);
         while (1) {
+            bzero(readBuffer, sizeof(readBuffer));
             strcat(writeBuffer, "\n");
             strcat(writeBuffer, EMPLOYEE_MENU);
             writeBytes = write(connFD, writeBuffer, strlen(writeBuffer));
@@ -174,6 +176,7 @@ bool employee_operation_handler(int connFD) {
             }
 
             int choice = atoi(readBuffer);
+
             switch (choice) {
                 case 1:
                     get_customer_details(connFD, -1);
@@ -207,7 +210,7 @@ bool employee_operation_handler(int connFD) {
 
 bool add_account(int connFD) {
     ssize_t readBytes, writeBytes;
-    char readBuffer[1000], writeBuffer[1000];
+    char readBuffer[10000], writeBuffer[10000];
 
     struct Account newAccount, prevAccount;
 
@@ -229,7 +232,7 @@ bool add_account(int connFD) {
     newAccount.active = true;
     newAccount.balance = 0;
 
-    int accountFileDescriptor = open(ACCOUNT_FILE, O_RDONLY);
+    int accountFileDescriptor = open(ACCOUNT_FILE, O_RDWR);
     if (accountFileDescriptor == -1 && errno == ENOENT) {
         // Account file was never created
         newAccount.accountNumber = 0;
@@ -259,12 +262,8 @@ bool add_account(int connFD) {
         lock.l_type = F_UNLCK;
         fcntl(accountFileDescriptor, F_SETLK, &lock);
 
-        close(accountFileDescriptor);
-
         newAccount.accountNumber = prevAccount.accountNumber + 1;
     }
-
-    accountFileDescriptor = open(ACCOUNT_FILE, O_WRONLY);
 
     writeBytes = write(accountFileDescriptor, &newAccount, sizeof(struct Account));
     if (writeBytes == -1) {
@@ -274,16 +273,37 @@ bool add_account(int connFD) {
 
     close(accountFileDescriptor);
 
-    int customerFileDescriptor = open(CUSTOMER_FILE, O_RDWR, S_IRWXU);
+    int customerFileDescriptor = open(CUSTOMER_FILE, O_RDWR);
     if (customerFileDescriptor == -1) {
         perror("Error while opening customer file");
         return -1;
     } else {
         struct Customer cust;
         int offset = lseek(customerFileDescriptor, newAccount.custid * sizeof(struct Customer), SEEK_SET);
+        if (offset == -1) {
+            perror("Error seeking to the Customer record!");
+            return false;
+        }
+
         readBytes = read(customerFileDescriptor, &cust, sizeof(struct Customer));
+        if (readBytes == -1) {
+            perror("Error reading Customer record from file!");
+            return false;
+        }
+
         cust.account = newAccount.accountNumber;
+
+        offset = lseek(customerFileDescriptor, newAccount.custid * sizeof(struct Customer), SEEK_SET);
+        if (offset == -1) {
+            perror("Error seeking to the Customer record for writing!");
+            return false;
+        }
+
         writeBytes = write(customerFileDescriptor, &cust, sizeof(struct Customer));
+        if (writeBytes == -1) {
+            perror("Error writing updated Customer record to file!");
+            return false;
+        }
     }
     close(customerFileDescriptor);
 
@@ -357,8 +377,9 @@ int add_customer(int connFD) {
             return false;
         }
 
+        int attempt_count = 3;
         // Check if the phone number is a 10-digit number
-        if (!is_valid_phone_number(readBuffer)) {
+        if (!is_valid_phone_number(readBuffer) && attempt_count > 0) {
             writeBytes = write(connFD, ADD_CUSTOMER_WRONG_PHONE, strlen(ADD_CUSTOMER_WRONG_PHONE));
             readBytes = read(connFD, readBuffer, sizeof(readBuffer));  // Dummy read
             return false;

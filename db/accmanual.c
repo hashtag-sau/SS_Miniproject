@@ -18,16 +18,18 @@ void insertHardcodedAccount() {
 
     // Hardcode values for the account
     account.accountNumber = 1001;
-    account.custid = 0;      // Linking to customer with ID 101
-    account.active = true;   // Active account
-    account.balance = 5000;  // Initial balance
+    account.custid = 0;       // Linking to customer with ID 101
+    account.active = true;    // Active account
+    account.balance = 11000;  // Initial balance
 
     // Open the file using the open() system call in write-only and append mode
-    file = open("account_db", O_WRONLY, 0644);
+    file = open("account_db", O_RDWR, 0644);
     if (file < 0) {
         perror("Error opening file");
         exit(1);
     }
+
+    // lseek(file, -sizeof(struct Account), SEEK_END);
 
     // Write the account record to the file
     ssize_t bytes_written = write(file, &account, sizeof(struct Account));

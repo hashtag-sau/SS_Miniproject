@@ -31,9 +31,9 @@ off_t find_account(int accountNumber, int accountFileDescriptor);
 // Function Definition =================================
 
 bool get_account_details(int connFD, struct Account *customerAccount, int AccountNumber) {
-    ssize_t readBytes, writeBytes;             // Number of bytes read from / written to the socket
-    char readBuffer[1000], writeBuffer[1000];  // A buffer for reading from / writing to the socket
-    char tempBuffer[1000];
+    ssize_t readBytes, writeBytes;               // Number of bytes read from / written to the socket
+    char readBuffer[10000], writeBuffer[10000];  // A buffer for reading from / writing to the socket
+    char tempBuffer[10000];
 
     int accountNumber;
     struct Account account;
@@ -63,22 +63,18 @@ bool get_account_details(int connFD, struct Account *customerAccount, int Accoun
 
     accountFileDescriptor = open(ACCOUNT_FILE, O_RDONLY);
     if (accountFileDescriptor == -1) {
-        // Account record doesn't exist
-        bzero(writeBuffer, sizeof(writeBuffer));
-        strcpy(writeBuffer, ACCOUNT_ID_DOESNT_EXIT);
-        strcat(writeBuffer, "^");
-        perror("Error opening account file in get_account_details!");
-        writeBytes = write(connFD, writeBuffer, strlen(writeBuffer));
-        if (writeBytes == -1) {
-            perror("Error while writing ACCOUNT_ID_DOESNT_EXIT message to client!");
-            return false;
-        }
-        readBytes = read(connFD, readBuffer, sizeof(readBuffer));  // Dummy read
+        perror("Error while opening account file");
+        return false;
+    }
+
+    off_t filesize = lseek(accountFileDescriptor, 0, SEEK_END);
+    if (filesize == -1) {
+        perror("Error determining file size");
         return false;
     }
 
     int offset = find_account(accountNumber, accountFileDescriptor);
-    if (offset == -1 && errno == EINVAL) {
+    if (offset == -1 || offset >= filesize) {
         // Account record doesn't exist
         bzero(writeBuffer, sizeof(writeBuffer));
         strcpy(writeBuffer, ACCOUNT_ID_DOESNT_EXIT);
@@ -91,14 +87,6 @@ bool get_account_details(int connFD, struct Account *customerAccount, int Accoun
         }
         readBytes = read(connFD, readBuffer, sizeof(readBuffer));  // Dummy read
         return false;
-    } else if (offset == -1) {
-        perror("Error while seeking to required account record! \n");
-        return false;
-    }
-
-    if (customerAccount != NULL) {
-        *customerAccount = account;
-        return true;
     }
 
     offset = lseek(accountFileDescriptor, offset, SEEK_SET);
@@ -107,6 +95,15 @@ bool get_account_details(int connFD, struct Account *customerAccount, int Accoun
     if (readBytes == -1) {
         perror("Error reading employee record from file!");
         return false;
+    }
+    if (readBytes == 0) {
+        perror("record doesn't exist!");
+        return false;
+    }
+
+    if (customerAccount != NULL) {
+        *customerAccount = account;
+        return true;
     }
 
     bzero(writeBuffer, sizeof(writeBuffer));
@@ -125,9 +122,9 @@ bool get_account_details(int connFD, struct Account *customerAccount, int Accoun
 }
 
 bool get_customer_details(int connFD, int customerID) {
-    ssize_t readBytes, writeBytes;              // Number of bytes read from / written to the socket
-    char readBuffer[1000], writeBuffer[10000];  // A buffer for reading from / writing to the socket
-    char tempBuffer[1000];
+    ssize_t readBytes, writeBytes;               // Number of bytes read from / written to the socket
+    char readBuffer[10000], writeBuffer[10000];  // A buffer for reading from / writing to the socket
+    char tempBuffer[10000];
 
     struct Customer customer;
     int customerFileDescriptor;
@@ -144,7 +141,6 @@ bool get_customer_details(int connFD, int customerID) {
         readBytes = read(connFD, readBuffer, sizeof(readBuffer));
         if (readBytes == -1) {
             perror("Error getting customer ID from client!");
-            ;
             return false;
         }
 
@@ -154,19 +150,18 @@ bool get_customer_details(int connFD, int customerID) {
     customerFileDescriptor = open(CUSTOMER_FILE, O_RDONLY);
     if (customerFileDescriptor == -1) {
         // Customer File doesn't exist
-        bzero(writeBuffer, sizeof(writeBuffer));
-        strcpy(writeBuffer, CUSTOMER_ID_DOESNT_EXIT);
-        strcat(writeBuffer, "^");
-        writeBytes = write(connFD, writeBuffer, strlen(writeBuffer));
-        if (writeBytes == -1) {
-            perror("Error while writing CUSTOMER_ID_DOESNT_EXIT message to client!");
-            return false;
-        }
-        readBytes = read(connFD, readBuffer, sizeof(readBuffer));  // Dummy read
+        perror("Error while opening customer file");
         return false;
     }
+    // Get the file size
+    off_t fileSize = lseek(customerFileDescriptor, 0, SEEK_END);
+    if (fileSize == -1) {
+        perror("Error determining file size");
+        return false;
+    }
+
     int offset = lseek(customerFileDescriptor, customerID * sizeof(struct Customer), SEEK_SET);
-    if (errno == EINVAL) {
+    if (offset == -1 && errno == EINVAL || offset >= fileSize) {
         // Customer record doesn't exist
         bzero(writeBuffer, sizeof(writeBuffer));
         strcpy(writeBuffer, CUSTOMER_ID_DOESNT_EXIT);
@@ -298,30 +293,60 @@ off_t find_account(int accountNumber, int accountFileDescriptor) {
     struct Account tempAccount;
     off_t offset = 0;
 
+    // Set the read pointer at the start of the file
+    if (lseek(accountFileDescriptor, 0, SEEK_SET) == -1) {
+        perror("Error seeking to the start of the account file");
+        return -1;
+    }
+
+    // Get the file size using lseek with SEEK_END
+    off_t fileSize = lseek(accountFileDescriptor, 0, SEEK_END);
+    if (fileSize == -1) {
+        perror("Error determining file size");
+        return -1;
+    }
+
+    // Set the read pointer back to the start of the file
+    if (lseek(accountFileDescriptor, 0, SEEK_SET) == -1) {
+        perror("Error seeking to the start of the account file");
+        return -1;
+    }
+
     // Iterate through all account records to find the matching account number
-    while (true) {
+    while (offset < fileSize) {
         // Try to lock the record
         struct flock lock = {F_RDLCK, SEEK_SET, offset, sizeof(struct Account), 0};
         int lockingStatus = fcntl(accountFileDescriptor, F_SETLK, &lock);
         if (lockingStatus == -1) {
+            printf("debug at findaccoutn 1\n");
             // If the record is locked, skip to the next record
             offset += sizeof(struct Account);
             if (lseek(accountFileDescriptor, offset, SEEK_SET) == -1) {
                 perror("Error seeking to next record");
                 break;
             }
+
             continue;
         }
 
-        // Read the record
-        if (read(accountFileDescriptor, &tempAccount, sizeof(struct Account)) <= 0) {
-            // If read fails or reaches EOF, break the loop
+        ssize_t readBytes = read(accountFileDescriptor, &tempAccount, sizeof(struct Account));
+        if (readBytes == -1) {
+            perror("Error reading Account record");
+            break;
+        }
+        if (readBytes == 0) {
+            // Reached EOF
+            perror("Reached EOF at find_account");
             break;
         }
 
-        printf("%d", tempAccount.accountNumber);
+        printf("debug at findaccount3\n");
+
         // Check if the account number matches
+        printf("actual acc %d\n", accountNumber);
+        printf("temp acc %d\n", tempAccount.accountNumber);
         if (tempAccount.accountNumber == accountNumber) {
+            printf("%d kjhkjhui\n", tempAccount.accountNumber);
             lock.l_type = F_UNLCK;
             fcntl(accountFileDescriptor, F_SETLK, &lock);
             return offset;
@@ -331,10 +356,6 @@ off_t find_account(int accountNumber, int accountFileDescriptor) {
         lock.l_type = F_UNLCK;
         fcntl(accountFileDescriptor, F_SETLK, &lock);
         offset += sizeof(struct Account);
-        if (lseek(accountFileDescriptor, offset, SEEK_SET) == -1) {
-            perror("Error seeking to next record");
-            break;
-        }
     }
 
     return -1;

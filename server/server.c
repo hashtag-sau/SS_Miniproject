@@ -81,7 +81,7 @@ void *connection_handler(void *connFD_ptr) {
     int userChoice;
 
     // Send initial prompt to the user when it connects
-    ssize_t writeBytes = write(connectionFD, INITIAL_PROMPT, strlen(INITIAL_PROMPT));
+    ssize_t writeBytes = write(connectionFD, INITIAL_PROMPT2, strlen(INITIAL_PROMPT2));
 
     if (writeBytes == -1)
         perror("Error while sending first prompt to the user!");

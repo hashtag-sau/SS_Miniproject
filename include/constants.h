@@ -16,6 +16,7 @@
 ╚════════════════════════════════════════════════════════════════╝\n\
 Enter your choice: "
 
+#define INITIAL_PROMPT2 "Enter your choice: 1. admin 2. customer 3. employee 4. exit\n"
 // ========== COMMON TEXT =============================
 
 // LOGIN
@@ -23,7 +24,6 @@ Enter your choice: "
 #define PASSWORD "Enter your password \n# "
 #define INVALID_LOGIN "The login ID specified doesn't exist!$"
 #define INVALID_PASSWORD "The password specified doesn't match!$"
-#define SALT_BAE "666"
 
 // GET ACCOUNT DETAILS
 #define GET_ACCOUNT_NUMBER "Enter the account number of the account you're searching for"
@@ -56,13 +56,6 @@ Enter your choice: "
 #define ADMIN_DEL_ACCOUNT_SUCCESS "This account has been successfully deleted\nRedirecting you to the main menu ...^"
 #define ADMIN_DEL_ACCOUNT_FAILURE "This account cannot be deleted since it still has some money\nRedirecting you to the main menu ...^"
 
-// MODIFY CUSTOMER INFO
-#define ADMIN_MOD_CUSTOMER_ID "Enter the ID of the customer who's information you want to edit"
-#define ADMIN_MOD_CUSTOMER_MENU "Which information would you like to modify?\n1. Name 2. Age 3. Gender \nPress any other key to cancel"
-#define ADMIN_MOD_CUSTOMER_NEW_NAME "What's the updated value for name?"
-#define ADMIN_MOD_CUSTOMER_NEW_GENDER "What's the updated value for gender?"
-#define ADMIN_MOD_CUSTOMER_NEW_AGE "What's the updated value for age?"
-
 #define ADMIN_MOD_CUSTOMER_SUCCESS "The required modification was successfully made!\nYou'll now be redirected to the main menu!^"
 
 #define ADMIN_LOGOUT "Logging you out now superman! Good bye!$"
@@ -73,6 +66,10 @@ Enter your choice: "
 #define ADD_EMPLOYEE "__Enter Employee details__"
 #define ADD_EMPLOYEE_NAME "Enter name: "
 #define ADD_EMPLOYEE_LOGIN_PASS "The login ID and password for the employee is : "
+#define MODIFY_EMPLOYEE "Enter the ID of the employee who's information you want to edit"
+#define MODIFY_EMPLOYEE_MENU "Which information would you like to modify?\n1. Name 2. ManagerRole\nPress any other key to cancel"
+#define MODIFY_EMPLOYEE_NEW_NAME "What's the updated name? "
+#define MODIFY_EMPLOYEE_NEW_ISMANAGER "Is the employee a manager? (1/0) "
 
 // admin admin
 #define ADD_ADMIN "__Enter Admin details__"
@@ -112,10 +109,15 @@ Enter your choice: "
 #define CUSTOMER_LOGIN_WELCOME "Welcome dear customer! Enter your cerdentials"
 #define CUSTOMER_LOGIN_SUCCESS "Sucessfully logged in. Now go to counter 5"
 
-#define CUSTOMER_LOGOUT "Logging you out now dear customer! Good bye!$"
+#define CUSTOMER_ALREADY_LOGGED_IN "You're already logged in!$"
 
-// ADMIN MENU
-#define CUSTOMER_MENU "1. Get Customer Details\n2. Deposit Money\n3. Withdraw Money\n4. Get Balance\n5. Get Transaction information\n6. Change Password\nPress any other key to logout"
+#define CUSTOMER_LOGOUT "Logging you out now dear customer! Good bye!$"
+#define SEND_AMOUNT "How much is it that you want to send?"
+#define SEND_ACCOUNT "Enter the account number of the account you want to send money to"
+#define SEND_AMOUNT_SUCCESS "The specified amount has been successfully sent to the specified account!^"
+
+// cusotmer MENU
+#define CUSTOMER_MENU "1. Get Customer Details\n2. Deposit Money\n3. Withdraw Money\n4. Send Money \n5. Get Balance\n6. Get Transaction information\n7. Change Password\nPress any other key to logout"
 
 #define ACCOUNT_DEACTIVATED "It seems your account has been deactivated!^"
 
