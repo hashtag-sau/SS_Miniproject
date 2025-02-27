@@ -157,7 +157,7 @@ bool customer_operation_handler(int connFD) {
         ssize_t writeBytes, readBytes;  // Number of bytes read from / written to the client
         char readBuffer[1000], writeBuffer[10000];
 
-        initialize_semaphores(loggedInCustomer.account);
+        initialize_semaphores(loggedInCustomer.id);
         int session = lock_semaphore(loginSemIdentifier, 1);
         if (session == -1) {
             bzero(writeBuffer, sizeof(writeBuffer));
@@ -399,15 +399,20 @@ bool withdraw(int connFD) {
                 return false;
             }
 
-            withdrawAmount = atol(readBuffer);
+            withdrawAmount = atoi(readBuffer);
 
             if (withdrawAmount != 0 && account.balance - withdrawAmount >= 0) {
                 write_transaction_to_file(account.accountNumber, -1, withdrawAmount);
 
                 account.balance -= withdrawAmount;
 
-                int accountFileDescriptor = open(ACCOUNT_FILE, O_WRONLY);
-                off_t offset = find_account(account.accountNumber, accountFileDescriptor);
+                int accountFileDescriptor = open(ACCOUNT_FILE, O_RDWR);
+                off_t offset = find_account(loggedInCustomer.account, accountFileDescriptor);
+                if (offset < 0) {
+                    perror("Account record not found or all records are locked!");
+                    unlock_semaphore(operationSemIdentifier);
+                    return false;
+                }
 
                 struct flock lock = {F_WRLCK, SEEK_SET, offset, sizeof(struct Account), getpid()};
                 int lockingStatus = fcntl(accountFileDescriptor, F_SETLKW, &lock);
@@ -416,14 +421,14 @@ bool withdraw(int connFD) {
                     unlock_semaphore(operationSemIdentifier);
                     return false;
                 }
-
+                lseek(accountFileDescriptor, offset, SEEK_SET);
                 writeBytes = write(accountFileDescriptor, &account, sizeof(struct Account));
                 if (writeBytes == -1) {
                     perror("Error writing updated balance into account file!");
                     unlock_semaphore(operationSemIdentifier);
                     return false;
                 }
-
+                printf("debug at withdraw 1 \n");
                 lock.l_type = F_UNLCK;
                 fcntl(accountFileDescriptor, F_SETLK, &lock);
 
@@ -437,6 +442,7 @@ bool withdraw(int connFD) {
                 return true;
             } else
                 writeBytes = write(connFD, WITHDRAW_AMOUNT_INVALID, strlen(WITHDRAW_AMOUNT_INVALID));
+            read(connFD, readBuffer, sizeof(readBuffer));
         } else
             write(connFD, ACCOUNT_DEACTIVATED, strlen(ACCOUNT_DEACTIVATED));
         read(connFD, readBuffer, sizeof(readBuffer));  // Dummy read
@@ -444,6 +450,7 @@ bool withdraw(int connFD) {
         unlock_semaphore(operationSemIdentifier);
     } else {
         // FAILURE while getting account information
+        printf("debug at withdraw 2 \n");
         unlock_semaphore(operationSemIdentifier);
         return false;
     }
@@ -458,7 +465,7 @@ bool get_balance(int connFD) {
         bzero(buffer, sizeof(buffer));
         printf("debug at get_balance : %d\n", account.balance);
         if (account.active) {
-            sprintf(buffer, "You have ₹ %d imaginary money in our bank!^", account.balance);
+            sprintf(buffer, "You have ₹ %d  in your bank account!^", account.balance);
             write(connFD, buffer, strlen(buffer));
         } else {
             write(connFD, ACCOUNT_DEACTIVATED, strlen(ACCOUNT_DEACTIVATED));
@@ -504,7 +511,7 @@ bool send_money(int connFD, int AccountNumber) {
 
             int receiverAccountNumber = atoi(readBuffer);
 
-            if (receiverAccountNumber == account.accountNumber) {
+            if (receiverAccountNumber == loggedInCustomer.account) {
                 write(connFD, "You can't send money to yourself!^", strlen("You can't send money to yourself!^"));
                 read(connFD, readBuffer, sizeof(readBuffer));  // Dummy read
                 unlock_semaphore(operationSemIdentifier);
@@ -812,9 +819,9 @@ int write_transaction_to_file(int accountNumber, int receiverAccount, int amount
     return newTransaction.transactionID;
 }
 
-void initialize_semaphores(int accountNumber) {
-    key_t loginSemKey = ftok(CUSTOMER_FILE, accountNumber);
-    key_t operationSemKey = ftok(ACCOUNT_FILE, accountNumber);
+void initialize_semaphores(int custid) {
+    key_t loginSemKey = ftok(CUSTOMER_FILE, custid);
+    key_t operationSemKey = ftok(ACCOUNT_FILE, custid);
 
     if (loginSemKey == -1 || operationSemKey == -1) {
         perror("Error generating semaphore keys");

@@ -109,4 +109,5 @@ void connection_handler(int sockFD) {
     } while (readBytes > 0);
 
     close(sockFD);
+    getchar();
 }

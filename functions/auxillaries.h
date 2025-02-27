@@ -50,6 +50,7 @@ void hold_screen(int connFD) {
         perror("Error sending clear screen command to the client!");
     }
     read(connFD, writeBuffer, sizeof(writeBuffer));  // Dummy read
+    printf("Client has pressed a key to continue\n");
 }
 
 #endif  // AUXILLARIES_H

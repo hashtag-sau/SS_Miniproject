@@ -67,7 +67,7 @@ bool get_account_details(int connFD, struct Account *customerAccount, int Accoun
             accountNumber = customerAccount->accountNumber;
     }
 
-    accountFileDescriptor = open(ACCOUNT_FILE, O_RDONLY);
+    accountFileDescriptor = open(ACCOUNT_FILE, O_RDWR);
     if (accountFileDescriptor == -1) {
         perror("Error while opening account file");
         return false;
